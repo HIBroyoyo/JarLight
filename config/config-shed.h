@@ -1,7 +1,7 @@
 //config file, using seeed studio xiao esp32c3 
-#define DEVICE_NAME "Jar Light" //Caps and spaces allowed, dont uses symbols
+#define DEVICE_NAME "Shed Lights" //Caps and spaces allowed, dont uses symbols
 
-//enable serial monitor (disable for production, espeacially esp's with USB (S3, C3, S2, etc.))
+//enable serial monitor | disable for production, espeacially esp's with builtin USB (S3, C3, S2, etc.)
 #define DEBUG
 
 #define SSID "Verizon_6NSP4Q"
@@ -16,7 +16,7 @@
 #define PORT 80
 #define SYNCPORT 420
 //probably unessicary and pretty insecure but its here :))))
-#define USEUPNP
+//#define USEUPNP
 #define UPNP_PORT 6996 //port for upnp to forward and websever to be on, will NOT overwrite local port
 #define LEASE_DURATION 604800
 //setting for dynamic dns (for use with upnp)
@@ -26,17 +26,19 @@
 #define DDNS_SERVICE "duckdns"
 #endif
 //led config
-#define NUMLEDS 68
-#define DATAPIN D10
-#define PIXELTYPE NeoGrbFeature
-#define PIXELSPEED Neo800KbpsMethod
+#define RGBW
+#define NUMLEDS 20
+#define DATAPIN 4
+#define PIXELTYPE NeoRgbwFeature
+#define PIXELSPEED NeoSk6812Method
 //mpu config
-#define USEMPU //comment out if not connected to mpu6500
+//#define USEMPU //comment out if not connected to mpu6500
 #define MPUINT D3
 #define MPUADDR 0x68
 #define MPUTHRESHOLD 125
 //battery config, comment out to not use battery
-#define BATTPIN D0
+//#define BATTPIN D0
+//#define MAX1704
 
 //time config
 #define TIMEZONE -5

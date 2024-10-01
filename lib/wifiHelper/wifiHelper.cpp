@@ -14,6 +14,9 @@ bool timers = false;
 bool sync_ = false;
 int syncNum = 0;
 FifoBuffer<String> buff;
+#ifdef MAX1704
+Adafruit_MAX17048 maxlipo;
+#endif
 
 
 
@@ -23,12 +26,16 @@ Timer* timerOff = nullptr;
 void powerOn() {
   strp->powerOn();
   ws.textAll("p:1");
+  #ifdef USEUPNP
   wws.textAll("p:1");
+  #endif
 }
 void powerOff() {
   strp->powerOff();
   ws.textAll("p:0");
+  #ifdef USEUPNP
   wws.textAll("p:0");
+  #endif
 }
 
 bool wifiConnect(bool showLeds)
@@ -100,8 +107,15 @@ bool wifiSetup(AnimationHelper *s)
   bool res = true;
   #ifdef BATTPIN
   pinMode(BATTPIN, INPUT);
+  #elif defined(MAX1704)
+  maxlipo.begin();
+  s->powerOff();
+  delay(10);
+  maxlipo.quickStart();
+  delay(10);
+  s->powerOn();
   #endif
-  SPIFFS.begin(false);
+  Serial.println(SPIFFS.begin(true));
   res = wifiConnect(false);
 #ifdef USEOTA
   ArduinoOTA
@@ -251,10 +265,20 @@ void parseMsg(String msg) {
     if (msg.startsWith("c:"))
     {
       String color = msg.substring(msg.indexOf(":") + 2);
+      Serial.println(color);
+      #ifdef RGBW
+      int white = strtoul(color.substring(0, 2).c_str(), NULL, 16);
+      int red = strtoul(color.substring(2, 4).c_str(), NULL, 16);
+      int green = strtoul(color.substring(4, 6).c_str(), NULL, 16);
+      int blue = strtoul(color.substring(6).c_str(), NULL, 16);
+      strp->setColor(red, green, blue, white, true);
+      #else
       int red = strtoul(color.substring(0, 2).c_str(), NULL, 16);
       int green = strtoul(color.substring(2, 4).c_str(), NULL, 16);
       int blue = strtoul(color.substring(4).c_str(), NULL, 16);
       strp->setColor(red, green, blue, true);
+      #endif
+      
     }
     if (msg.startsWith("ca:"))
     {
@@ -301,14 +325,17 @@ void parseMsg(String msg) {
         tm time;
         time.tm_hour = msg.substring(0, msg.indexOf(':')).toInt();
         time.tm_min = msg.substring(msg.indexOf(':')+1).toInt();
-        timerOn = new Timer(time, powerOn);
+        delete timerOn;
+        if(timers) timerOn = new Timer(time, powerOn);
         saveTimer(SPIFFS, "on", time);
       }
       else if(type.equals("off")) {
         tm time;
         time.tm_hour = msg.substring(0, msg.indexOf(':')).toInt();
         time.tm_min = msg.substring(msg.indexOf(':')+1).toInt();
+        delete timerOff;
         timerOff = new Timer(time, powerOff);
+        if(timers) timerOff->begin();
         saveTimer(SPIFFS, "off", msg.substring(0, msg.indexOf(':')).toInt(), msg.substring(msg.indexOf(':')+1).toInt());
       }
       else if(type.equals("toggle")) {
@@ -383,6 +410,12 @@ String colorToHex(uint32_t color) {
   byte g = color >> 8;
   byte b = color;
   String index;
+  #ifdef RGBW
+  byte w = color >> 24;
+  if (w < 16)
+    index += "0";
+  index += String(w, HEX);
+  #endif
   if (r < 16)
     index += "0";
   index += String(r, HEX);
@@ -407,13 +440,18 @@ void updateData(AsyncWebSocket* server)
     server->textAll("w:AP");
   else
     server->textAll("w:STA");
-  #ifdef BATTPIN
+  #if defined(MAX1704) || defined(BATTPIN)
   server->textAll("type:battery");
   sendBattery();
   #else
   server->textAll("type:wall");
   #endif
   server->textAll("n:" + String(DEVICE_NAME));
+  if(timerOn != nullptr) {
+    tm time = timerOn->getTime();
+    server->textAll("curTime:" + String(time.tm_hour) + ":" + String(time.tm_min));
+  }
+  
   if(SPIFFS.exists("/on.tmr")) {
     tm time = getTimer(SPIFFS, "on");
     String temp = "t:on:";
@@ -437,10 +475,16 @@ void updateData(AsyncWebSocket* server)
   }
   server->textAll("t:toggle:" + String(timers));
   server->textAll("sync:"+String(sync_));
+  #ifdef RGBW
+  server->textAll("white:1");
+  #else
+  server->textAll("white:0");
+  #endif
 }
-#ifdef BATTPIN
+#if defined(MAX1704) || defined(BATTPIN)
 void sendBattery()
 {
+  #ifdef BATTPIN
   int battVolt = analogReadMilliVolts(BATTPIN) * 2;
   if (strp->getPower())
   {
@@ -452,6 +496,12 @@ void sendBattery()
   ws.textAll("batt:" + String(percent));
   #ifdef USEUPNP
   wws.textAll("batt:" + String(percent));
+  #endif
+  #else
+  ws.textAll("batt:" + String(maxlipo.cellPercent()));
+  #ifdef USEUPNP
+  wws.textAll("batt:" + String(maxlipo.cellPercent()));
+  #endif
   #endif
 }
 #endif

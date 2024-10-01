@@ -42,7 +42,7 @@ boolean Timer::begin() {
         configTime(3600*TIMEZONE, 0, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
         if(getLocalTime(&curTime, 5000)) {
             if(isDST(curTime.tm_year, curTime.tm_mon, curTime.tm_mday, curTime.tm_hour, TIMEZONE)) 
-                configTime(3600*TIMEZONE, -3600, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
+                configTime(3600*TIMEZONE, 3600, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
             xTaskCreatePinnedToCore(
                     [](void* pvParameters){
                         Timer* thisTimer = static_cast<Timer*>(pvParameters);

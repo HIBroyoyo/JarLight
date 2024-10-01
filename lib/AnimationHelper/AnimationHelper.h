@@ -24,6 +24,9 @@ class AnimationHelper {
 
     void begin();
     void setColor(uint8_t r, uint8_t g, uint8_t b, bool sho = false);
+    #ifdef RGBW
+    void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w, bool sho = false);
+    #endif
     void setColorHsv(uint8_t h, uint8_t s, uint8_t v, bool sho = false);
     void setColor(uint32_t c, bool sho = false);
     void showColor();
@@ -58,10 +61,19 @@ class AnimationHelper {
     void setStrip(NeoPixelBrightnessBus<PIXELTYPE, PIXELSPEED>* s);
 
     private:
-    void fill(RgbColor c);
+    void fill(uint32_t c);
+    //void fill(RgbColor c);
+    
     uint8_t pin;
     NeoPixelBrightnessBus<PIXELTYPE, PIXELSPEED>* strip;
+    #ifdef RGBW
+    //highest order bits are w
+    RgbwColor color;
+    uint32_t colorToUInt32(RgbwColor c);
+    #else
     RgbColor color;
+    uint32_t colorToUInt32(RgbColor c);
+    #endif
     uint32_t primaryAnimColor = 0xFFFFFF; //default these to white and black
     uint32_t secondaryAnimColor = 0x000000;
     int NLEDS = 0;
@@ -70,6 +82,7 @@ class AnimationHelper {
     float speed = 0.5;
     int animation = -1;
     SemaphoreHandle_t xSemaphore = xSemaphoreCreateMutex();
+    xTaskHandle currentAnimation;
     animPtr* animations = NULL;
     String** animNames;
     int numAnims = 0;

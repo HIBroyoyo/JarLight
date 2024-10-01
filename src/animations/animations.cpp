@@ -262,8 +262,19 @@ void chSparkle(void* s) {
       if(sat[i] < 255 && ((int)sat[i] + FADEBY) > 255) sat[i] = 255;
       else if(sat[i] < 255) sat[i] += FADEBY;
   }
-    helper->show();;
+    helper->show();
     xSemaphoreGive(*xSemaphore);
     vTaskDelay(abs(100 * (1.0 - helper->getSpeed())));
   }
 }
+#ifdef RGBW
+void white(void* s) {
+AnimationHelper* helper = static_cast<AnimationHelper *>(s);
+for(;;){
+  xSemaphoreTake( *xSemaphore, portMAX_DELAY);
+  helper->setColor(255, 50, 0, 255, true);
+  xSemaphoreGive(*xSemaphore);
+  vTaskDelay(1000);
+}
+}
+#endif

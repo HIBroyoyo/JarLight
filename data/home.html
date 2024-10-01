@@ -1,3 +1,5 @@
+<head><link rel="stylesheet" href="style.css" />
+  <script src="script.js"></script></head>
 <h1 id="deviceName">Loading...</h1>
         <div class="content">
           <div id="battery">
@@ -17,7 +19,12 @@
         </div>
         <div id="static">
             <h3 for="colorpicker">Color Picker:</h3>
-            <input type="color" id="colorpicker" class="colorpicker" value="#000000" style="position: relative; scale: 200%;" oninput="sendMsg('c:'+this.value.toString())"> 
+            <input type="color" id="colorpicker" class="colorpicker" value="#000000" style="position: relative; scale: 200%;" oninput="sendMsg('c:'+getColor())">
+            <div id="whiteContainer" style="display: none;">
+              <br>
+              <h3 for="white">White:</h3>
+              <input type="range" min="0" max="255" value="0" id="white" class="slide" oninput="sendMsg('c:'+getColor())">
+            </div>
         </div>
       </div>
       <div id="syn">

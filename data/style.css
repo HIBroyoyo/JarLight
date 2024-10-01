@@ -1,3 +1,7 @@
+:root {
+    --col: #ff0000;
+  }
+
 html {
                 display: block;
                 margin: 5%;
@@ -15,16 +19,16 @@ html {
             }
 
             h1 {
-                color: red;
+                color: var(--col);
             }
 
             h3 {
-                color: red;
+                color: var(--col);
                 padding-bottom: 10px;
             }
 
             p {
-                color: red;
+                color: var(--col);
             }
 
             #static {
@@ -71,11 +75,11 @@ html {
             }
 
             input:checked+.sliderSwitch {
-                background-color: #ff2b2b;
+                background-color: var(--col);
             }
 
             input:focus+.sliderSwitch {
-                box-shadow: 0 0 1px #ff2b2b;
+                box-shadow: 0 0 1px var(--col);
             }
 
             input:checked+.sliderSwitch:before {
@@ -98,7 +102,7 @@ html {
                 width: 75%;
                 max-width: 550px;
                 height: 50px;
-                border-color: #ff2b2b;
+                border-color: var(--col);
                 display: inline-flexbox;
                 box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
                 font-family: Arial, Helvetica, sans-serif;
@@ -111,7 +115,7 @@ html {
 
             .animButtons:hover {
                 box-shadow: 0 12px 16px 0 rgba(255, 0, 0, 0.24), 0 17px 50px 0 rgba(255, 0, 0, 0.288);
-                background-color: #ff2b2b;
+                background-color: var(--col);
             }
 
             .animButtons:active {
@@ -177,7 +181,7 @@ html {
                 width: 35px;
                 /* Set a specific slider handle width */
                 /* Slider handle height */
-                background: #ff0000;
+                background: var(--col);
                 /* Green background */
                 cursor: pointer;
                 /* Cursor on hover */
@@ -188,7 +192,25 @@ html {
                 /* Set a specific slider handle width */
                 height: 35px;
                 border-radius: 50%;
-                background: #ff0000;
+                background: var(--col);
+                /* Green background */
+                cursor: pointer;
+                /* Cursor on hover */
+            }
+            #white {
+                width: 40%;
+                height: 10px;
+                border-radius: 5px;
+            }
+            #white::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                /* Override default look */
+                height: 20px;
+                border-radius: 50%;
+                width: 20px;
+                /* Set a specific slider handle width */
+                /* Slider handle height */
+                background: var(--col);
                 /* Green background */
                 cursor: pointer;
                 /* Cursor on hover */
@@ -215,7 +237,7 @@ html {
                 background-color: #111111;
                 margin: 10px;
                 color:#ffffff;
-                border-color: #ff0000;
+                border-color: var(--col);
                 border-radius: 25px;
                 width: 25%;
                 height: 35px;
@@ -258,8 +280,8 @@ html {
                 border-color: white;
                 border-width: 3px;
                 border-radius: 5px;
-                height: 80px;
-                width: 80px;
+                height: 82px;
+                width: 82px;
                 margin: 0px;
                 color: white;
                 background-color: #333;

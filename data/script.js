@@ -3,6 +3,8 @@ var gateway = `ws://${window.location.hostname}:${window.location.port}/ws`;
 var websocket;
 var animButtons;
 var animCount = 0;
+var rgbw = false;
+var r = document.querySelector(':root');
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
     websocket = new WebSocket(gateway);
@@ -35,7 +37,10 @@ function updatePage(data) {
     var value = data.toString().substring(data.toString().indexOf(':') + 1);
     console.log(topic + value)
     if (topic == 'p') document.getElementById('powerSwitch').checked = (value == "1");
-    if (topic == 'c') document.getElementById('colorpicker').value = value;
+    if (topic == 'c') {
+        updateColor(value);
+        r.style.setProperty("--col", value);
+    }
     if (topic == 'ca') {
         let num = value.substring(0, value.toString().indexOf(':'));
         value = value.substring(value.toString().indexOf(':') + 1);
@@ -86,6 +91,12 @@ function updatePage(data) {
     if(topic == 'sync') {
         document.getElementById("sync").checked = (value == "1");
     }
+    if(topic == 'white') {
+        rgbw = (value == "1");
+        console.log(rgbw);
+        if(rgbw) document.getElementById("whiteContainer").style.display = "block";
+        else document.getElementById("whiteContainer").style.display = "none";
+    }
 }
 window.addEventListener('load', onLoad);
 
@@ -130,7 +141,30 @@ async function switchPage(page, button) {
     sendMsg("update");
     animCount = 0;
     sendMsg('getAnimations');
-    button.style.cssText = "background-color: red;"
+    button.style.cssText = "background-color: var(--col);"
+}
+
+function getColor() {
+    var c = document.getElementById("colorpicker").value.toString();
+    r.style.setProperty('--col', c.toUpperCase());
+    if(rgbw) {
+        let w = document.getElementById("white").value;
+        w = parseInt(w);
+        c = "#";
+        if(w < 16) c += "0";
+        w = w.toString(16);
+        c += w;
+        c += document.getElementById("colorpicker").value.toString().substring(1);
+    }
+    return c;
+}
+
+function updateColor(value) {
+    if(rgbw) {
+        document.getElementById("colorpicker").value = "#" + value.substring(3);
+        document.getElementById("white").value = parseInt(value.substring(1, 3), 16);
+    }
+    else document.getElementById("colorpicker").value = value;
 }
 /*<input type="button" value="Cylon" class="animButtons" onclick="sendMsg('a:cylon')">
             <input type="button" value="Cycle" class="animButtons" onclick="sendMsg('a:cycle')">

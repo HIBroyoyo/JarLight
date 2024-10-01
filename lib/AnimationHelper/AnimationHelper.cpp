@@ -15,6 +15,12 @@ void AnimationHelper::setColor(uint8_t r, uint8_t g, uint8_t b, bool sho) {
     color = RgbColor(r, g, b);
     if(sho) showColor();
 }
+#ifdef RGBW 
+void AnimationHelper::setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w, bool sho) {
+    color = RgbwColor(r, g, b, w);
+    if(sho) showColor();
+}
+#endif
 void AnimationHelper::setColorHsv(uint8_t h, uint8_t s, uint8_t v, bool sho) {
     color = HslColor(h, s, v);
     if(sho) showColor();
@@ -26,7 +32,7 @@ void AnimationHelper::setColor(uint32_t c, bool sho) {
 void AnimationHelper::showColor() 
 {
 if(animation != -1)setAnimation(-1);
-fill(color);
+fill(colorToUInt32(color));
 if(!power) return;
 strip->Show();
 }
@@ -55,23 +61,22 @@ void AnimationHelper::addAnimation(String* name, animPtr anim) {
 }
 void AnimationHelper::setAnimation(int a) {
     animation = a;
-        xTaskHandle animTask = xTaskGetHandle("Animation Task");
-        if(animTask != NULL) 
+        if(currentAnimation != NULL) 
         {
             xSemaphoreTake(xSemaphore, portMAX_DELAY);
-            vTaskDelete(animTask);
+            vTaskDelete(currentAnimation);
             xSemaphoreGive(xSemaphore);
             Serial.println("delete");
         }
-        if(animation != -1) {
-            #ifdef ESP32DEV
+        if(a != -1) {
+            #if defined(ESP32DEV) || defined(ESP32S3)
             xTaskCreatePinnedToCore(
-                animations[animation],
+                animations[a],
                 "Animation Task",
                 2048,
                 this,
                 2,
-                NULL,
+                &currentAnimation,
                 1);
             #endif
             #ifdef ESP32C3
@@ -110,23 +115,21 @@ void AnimationHelper::setPower(bool p) {
         if(animation == -1) showColor();
         else 
         {
-            xTaskHandle animTask = xTaskGetHandle("Animation Task");
-            if(animTask != NULL) vTaskResume(animTask);
+            if(currentAnimation != NULL) vTaskResume(currentAnimation);
         }
     }
     else 
     {
         if(animation != -1) 
         {
-            xTaskHandle animTask = xTaskGetHandle("Animation Task");
-            if(animTask != NULL) 
+            if(currentAnimation != NULL) 
             {
                 xSemaphoreTake(xSemaphore, portMAX_DELAY);
-                vTaskSuspend(animTask);
+                vTaskSuspend(currentAnimation);
                 xSemaphoreGive(xSemaphore);
             }
         }
-        fill(RgbColor(0, 0, 0));
+        fill(0);
         strip->Show();
     }
 }
@@ -154,6 +157,7 @@ void AnimationHelper::setPixelColor(int p, uint32_t c, bool sho) {
 }
 void AnimationHelper::show() {
     strip->Show();
+    vTaskDelay(5);
 }
 void AnimationHelper::setPrimeAnimColor(byte r, byte g, byte b) {
     primaryAnimColor = ((uint32_t)r << 16) + ((uint32_t)g << 8) + (b);
@@ -170,13 +174,19 @@ uint32_t AnimationHelper::getSecAnimColor() {
     return secondaryAnimColor;
 }
 uint32_t AnimationHelper::getPixelColor(int p) {
-    return (uint32_t)HtmlColor(strip->GetPixelColor(p)).Color;
+    return colorToUInt32(strip->GetPixelColor(p));
 }
 
-void AnimationHelper::fill(RgbColor c) {
-    for(int i=0; i<NUMLEDS; i++) 
-        strip->SetPixelColor(i, c);
+void AnimationHelper::fill(uint32_t c) {
+    for(int i=0; i<NUMLEDS; i++)
+        #ifdef RGBW
+        strip->SetPixelColor(i, RgbwColor(c));
+        #else
+        strip->SetPixelColor(i, HtmlColor(c));
+        #endif
 }
+
+
 
 bool AnimationHelper::getPower() {
     return power;
@@ -200,7 +210,7 @@ int AnimationHelper::getNumberAnimations() {
     return numAnims;
 }
 uint32_t AnimationHelper::getColor() {
-    return HtmlColor(color).Color;
+    return colorToUInt32(color);
 }
 NeoPixelBrightnessBus<PIXELTYPE, PIXELSPEED>* AnimationHelper::getStrip() {
     return strip;
@@ -208,3 +218,19 @@ NeoPixelBrightnessBus<PIXELTYPE, PIXELSPEED>* AnimationHelper::getStrip() {
 void AnimationHelper::setStrip(NeoPixelBrightnessBus<PIXELTYPE, PIXELSPEED>* s) {
     strip = s;   
 }
+#ifdef RGBW
+uint32_t AnimationHelper::colorToUInt32(RgbwColor c) {
+    uint32_t temp = c.W << 24;
+    temp += c.R << 16;
+    temp += c.G << 8;
+    temp += c.B;
+    return temp;
+}
+#else
+uint32_t AnimationHelper::colorToUInt32(RgbColor c) {
+    uint32_t temp = c.R << 16;
+    temp += c.G << 8;
+    temp += c.B;
+    return temp;
+}
+#endif

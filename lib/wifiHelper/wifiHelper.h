@@ -15,6 +15,9 @@
 #ifdef USE_DDNS
 #include <EasyDDNS.h>
 #endif
+#ifdef MAX1704
+#include <Adafruit_MAX1704X.h>
+#endif
 
 bool wifiSetup(AnimationHelper* s);
 
@@ -28,6 +31,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t id, A
 void updateData(AsyncWebSocket* server);
 void updateClients();
 void handleWiFi();
-#ifdef BATTPIN
+#if defined(MAX1704) || defined(BATTPIN)
 void sendBattery();
 #endif
